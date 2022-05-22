@@ -33,8 +33,8 @@ public class RotateCube : MonoBehaviour
 
     public Transform RotationCube;
 
-    public float speedRotateX = 10;
-    public float speedRotateY = 10;
+    private float speedRotateX = 100;
+    private float speedRotateY = 100;
 
     [HideInInspector] public List<Transform> side;
     private string touched;
@@ -312,8 +312,8 @@ public class RotateCube : MonoBehaviour
         }
         if (!isRotating&& Input.touchCount == 2)
         {
-            RelativeCube.RotateAround(RotationCube.transform.position, RotationCube.up, -Input.GetTouch(0).deltaPosition.x * speedRotateX * Mathf.Deg2Rad);
-            RelativeCube.RotateAround(RotationCube.transform.position, RotationCube.right, Input.GetTouch(0).deltaPosition.y * speedRotateY * Mathf.Deg2Rad);
+            RelativeCube.RotateAround(RotationCube.transform.position, RotationCube.up, -Input.GetTouch(0).deltaPosition.x * speedRotateX * Mathf.Deg2Rad * Mathf.Deg2Rad);
+            RelativeCube.RotateAround(RotationCube.transform.position, RotationCube.right, Input.GetTouch(0).deltaPosition.y * speedRotateY * Mathf.Deg2Rad * Mathf.Deg2Rad);
         }
     }   
 }
