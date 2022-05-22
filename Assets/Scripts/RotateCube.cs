@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -11,6 +12,9 @@ public class RotateCube : MonoBehaviour
     private bool isRotating;
     //private bool isShuffled;
     private bool isTimer;
+    //private bool isWin;
+
+
 
     [HideInInspector] public List<Transform> U;
     [HideInInspector] public List<Transform> R;
@@ -21,9 +25,10 @@ public class RotateCube : MonoBehaviour
     [HideInInspector] public List<List<Transform>> sides;
 
     public Transform RelativeCube;
+    public Transform Pref;
 
     private Transform[] Cubes;
-
+    private Transform[] StartCubes;
     public Transform TheCenter;
 
     public Transform RotationCube;
@@ -44,7 +49,6 @@ public class RotateCube : MonoBehaviour
     Vector3 targetScaleVector = new Vector3(0.2f, 0.2f, 0.2f);
     float animationSpeed = 0.1f;
 
-    [SerializeField] private float time;
     [SerializeField] private Text timerText;
     private float _timeLeft = 0f;
     private IEnumerator StartTimer()
@@ -62,6 +66,20 @@ public class RotateCube : MonoBehaviour
         float seconds = Mathf.FloorToInt(_timeLeft % 60);
         timerText.text = string.Format("{0:00} : {1:00}", minutes, seconds);
     }
+    //private bool IfEquals()
+    //{
+    //    for (int x = 0; x < StartCubes.Length; x++)
+    //    {
+    //        if (StartCubes[x].tag == "Cube" && Cubes[x].tag == "Cube")
+    //        {
+    //            Debug.Log(StartCubes[x].localPosition);
+    //            Debug.Log(Cubes[x].localPosition);
+    //            if (StartCubes[x].localPosition != Cubes[x].localPosition)
+    //                return false;
+    //        }      
+    //    }
+    //    return true;
+    //}
     public IEnumerator Boom()
     {
         foreach (Transform child in RelativeCube)
@@ -75,44 +93,15 @@ public class RotateCube : MonoBehaviour
             }
             child.localScale = targetScaleVector;
             Destroy(child.gameObject);
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.9f);
         }
 
-        //foreach (Transform child in RelativeCube)
-        //{
-        //    Destroy(child.gameObject);
-        //}
 
         yield break;
     }
-    //private void Boom()
-    //{
-    //    foreach (Transform child in RelativeCube)
-    //    {
-    //        Destroy(child);
-    //    }
 
-    //}
-
-    //public IEnumerator DoShuffle()
-    //{
-    //    isShuffled = true;
-    //    short random_step;
-    //    short random_dir;
-    //    for (int i = 0; i < Random.Range(15, 30); i++)
-    //    {
-    //        random_step = (short)Random.Range(0, steps.Length);
-    //        random_dir = (short)(Random.Range(0, 1) * 2 - 1);
-
-    //        foreach (var v in sides[random_step])
-    //            StartCoroutine(Rotation(v, steps[random_step] * random_dir));   
-    //        yield return new WaitForSeconds(1);
-    //    }
-    //    isShuffled = false;
-    //}
     void DoShuffle()
     {
-        //isShuffled = true;
         short random_step;
         short random_dir;
         for (int i = 0; i < Random.Range(15, 30); i++)
@@ -125,9 +114,8 @@ public class RotateCube : MonoBehaviour
                 v.RotateAround(TheCenter.transform.position, steps[random_step] * random_dir, 90);
                 FindPositions(Cubes);
             }
-                
+
         }
-        //isShuffled = false;
     }
 
     public IEnumerator Rotation(Transform v, Vector3 RotVector)
@@ -136,8 +124,8 @@ public class RotateCube : MonoBehaviour
         short _angle = 0;
         while (_angle != 90)
         {
-            _angle++;
-            v.RotateAround(TheCenter.transform.position, RotVector, 1);
+            _angle += 10;
+            v.RotateAround(TheCenter.transform.position, RotVector, 10);
             yield return new WaitForSeconds(0.00000001f);
         }
 
@@ -194,19 +182,12 @@ public class RotateCube : MonoBehaviour
 
     private void Start()
     {
-        _timeLeft = time;
+        _timeLeft = StaticScript.Time;
         isRotating = false;
         Cubes = RelativeCube.GetComponentsInChildren<Transform>();
+        StartCubes = Pref.GetComponentsInChildren<Transform>(); 
         FindPositions(Cubes);
-        //foreach (var s in sides)
-        //{
-        //    foreach (Transform transform in s)
-        //    {
-        //        Debug.Log(transform.name);
-        //    }
-        //}
         DoShuffle();
-        //if (!isShuffled) StartCoroutine(StartTimer());
     }
 
     void Update()
@@ -215,9 +196,8 @@ public class RotateCube : MonoBehaviour
         {
             StartCoroutine(Boom());
             timerText.text = "Время вышло!";
-            //_timeLeft = 0;
         }
-        if (!isRotating /*&& !isShuffled*/ && Input.touchCount == 1)
+        if (!isRotating /*&& !isWin*/ && Input.touchCount == 1)
         {
             if (!isTimer) StartCoroutine(StartTimer());
             isTimer = true;
@@ -228,16 +208,11 @@ public class RotateCube : MonoBehaviour
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1))
                 {
-                    //foreach (var s in sides)
-                    //{
-                    //    foreach (Transform transform in s)
-                    //    {
-                            if (/*hit.collider.transform == transform &&*/ !side.Contains(hit.collider.transform))
+                            if ( !side.Contains(hit.collider.transform))
                             {
                                 side.Add(hit.collider.transform);
                             }
-                    //    }
-                    //}
+
                 }
                 if (Physics.Raycast(ray, out hit))
                 {
@@ -262,16 +237,11 @@ public class RotateCube : MonoBehaviour
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1))
                 {
-                    //foreach (var s in sides)
-                    //{
-                    //    foreach (Transform transform in s)
-                    //    {
-                            if (/*hit.collider.transform == transform &&*/ !side.Contains(hit.collider.transform))
+                            if (!side.Contains(hit.collider.transform))
                             {
                                 side.Add(hit.collider.transform);
                             }
-                    //    }
-                    //}
+
                 }
                 if (side.Count > 1)
                 {
@@ -284,7 +254,6 @@ public class RotateCube : MonoBehaviour
                                 if (touched == "f" || touched == "b" || touched == "r" || touched == "l")
                                 {
                                     foreach (Transform v in U)
-                                        //v.RotateAround(TheCenter.transform.position, TheCenter.up * rot_dir, 90);
                                         StartCoroutine(Rotation(v, TheCenter.up * rot_dir));
                                 }
                             }
@@ -293,7 +262,6 @@ public class RotateCube : MonoBehaviour
                                 if (touched == "f" || touched == "b" || touched == "r" || touched == "l")
                                 {
                                     foreach (Transform v in D)
-                                        //v.RotateAround(TheCenter.transform.position, TheCenter.up * rot_dir, 90);
                                         StartCoroutine(Rotation(v, TheCenter.up * rot_dir));
                                 }
                             }
@@ -302,7 +270,6 @@ public class RotateCube : MonoBehaviour
                                 if (touched == "u" || touched == "d" || touched == "r" || touched == "l")
                                 {
                                     foreach (Transform v in F)
-                                        //v.RotateAround(TheCenter.transform.position, TheCenter.forward* rot_dir, 90);
                                         StartCoroutine(Rotation(v, TheCenter.forward * rot_dir));
                                 }
                             }
@@ -311,7 +278,6 @@ public class RotateCube : MonoBehaviour
                                 if (touched == "u" || touched == "d" || touched == "r" || touched == "l")
                                 {
                                     foreach (Transform v in B)
-                                        //v.RotateAround(TheCenter.transform.position, TheCenter.forward * rot_dir, 90);
                                         StartCoroutine(Rotation(v, TheCenter.forward * rot_dir));
                                 }
                             }
@@ -320,7 +286,6 @@ public class RotateCube : MonoBehaviour
                                 if (touched == "f" || touched == "b" || touched == "u" || touched == "d")
                                 {
                                     foreach (Transform v in R)
-                                        //v.RotateAround(TheCenter.transform.position, TheCenter.right * rot_dir, 90);
                                         StartCoroutine(Rotation(v, TheCenter.right * rot_dir));
                                 }
                             }
@@ -329,21 +294,26 @@ public class RotateCube : MonoBehaviour
                                 if (touched == "f" || touched == "b" || touched == "u" || touched == "d")
                                 {
                                     foreach (Transform v in L)
-                                        //v.RotateAround(TheCenter.transform.position, TheCenter.right * rot_dir, 90);
                                         StartCoroutine(Rotation(v, TheCenter.right * rot_dir));
                                 }
                             }
                         }
                     }
-                }       
-                side.Clear();
-                touched = "";
+                    //if (IfEquals())
+                    //{
+                    //    _timeLeft = 0;
+                    //    timerText.text = "Уровень пройден!";
+                    //    isWin = true;
+                    //}
+                    side.Clear();
+                    touched = "";
+                }                   
             }           
         }
-        if (!isRotating /*&& !isShuffled*/ && Input.touchCount == 2)
+        if (!isRotating&& Input.touchCount == 2)
         {
-            RelativeCube.RotateAround(RotationCube.transform.position, RotationCube.up, -Input.GetTouch(0).deltaPosition.x * speedRotateX * Mathf.Deg2Rad * Mathf.Deg2Rad);
-            RelativeCube.RotateAround(RotationCube.transform.position, RotationCube.right, Input.GetTouch(0).deltaPosition.y * speedRotateY * Mathf.Deg2Rad * Mathf.Deg2Rad);
+            RelativeCube.RotateAround(RotationCube.transform.position, RotationCube.up, -Input.GetTouch(0).deltaPosition.x * speedRotateX * Mathf.Deg2Rad);
+            RelativeCube.RotateAround(RotationCube.transform.position, RotationCube.right, Input.GetTouch(0).deltaPosition.y * speedRotateY * Mathf.Deg2Rad);
         }
     }   
 }
